@@ -3,7 +3,7 @@ const rlinterface = require("readline").createInterface({
   output: process.stdout,
 });
 
-const ESONraw = {
+const parser = {
   getchildren: function (eson = "") {
     eson = eson.trimStart();
     let obj = {};
@@ -252,7 +252,7 @@ const ESONraw = {
 
 rlinterface.on("line", (data) => {
   if (data == "a") {
-    console.log(ESONraw.parse(`{1=[],2=[]}`));
+    console.log(parser.parse(`{1=[],2=[]}`));
   } else {
     console.log(eval(data));
   }
