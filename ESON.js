@@ -9,13 +9,13 @@ var ESON = {
      */
     parse: (text) => parser.parse(text),
     /**
-     * Converts a JavaScript value to a Easy JSON (ESON) string.
+     * Converts a JavaScript value into a Easy JSON (ESON) string.
      * @param {any} value A JavaScript value, usually an object or array, to be converted.
      * @returns {string}
      */
     stringify: (value) => parser.stringify(value),
     /**
-     * Converts string that contains only Number to Number.
+     * Converts string that contains only Number into Number.
      * @param {Object} object
      * @returns {Object}
      */
@@ -51,7 +51,6 @@ const parser = {
               if (eson.startsWith(",")) {
                 eson = eson.substring(1).trimStart();
               }
-              console.log("tempESON[1] == " + eson);
               return [array, eson];
             }
             const commapos = eson.indexOf(",");
@@ -87,14 +86,12 @@ const parser = {
           }
         }
         if (!eson.includes("=")) {
-          console.log("beforeError: " + eson);
           throw new Error("Invalid ESON format.");
         }
         const currentObjName = eson.substring(0, eson.indexOf("=")).trimEnd();
         eson = eson.substring(eson.indexOf("=") + 1).trimStart();
         const commapos = eson.indexOf(",");
         if (commapos == -1) {
-          console.log("not found: " + eson);
           const tempEson = eson.substring(0, eson.indexOf("}")) + ",";
           eson = tempEson + eson.substring(eson.indexOf("}"));
         }
@@ -178,7 +175,6 @@ const parser = {
           Object.assign(obj, { [currentObjName]: value });
         }
       }
-      console.log("taken time: " + (Date.now() - date));
       return obj;
     },
     strnumToNum: function (obj = {}) {
@@ -209,20 +205,16 @@ const parser = {
       while (true) {
         count++;
         if (separated.length < 2) {
-          console.log("break because separated.length<2");
           break;
         }
         let type = 0;
         const processing = separated.splice(0, 2);
-        console.log("before:");
-        console.log(processing[1] + "\n");
         if (processing[1].includes(" ") || processing[1].includes(",")) {
           const colonchecker = stringified
             .substring(
               stringified.indexOf(processing[1], currentPosition) + 2 + processing[1].length
             )
             .substring(0, 5);
-          console.log("colonchecker: " + colonchecker);
           if (colonchecker.startsWith(":")) {
             //this is objectname
             const searchStr = `"${processing[1]}":`;
@@ -250,7 +242,6 @@ const parser = {
               stringified.indexOf(`"${processing[1]}"`, currentPosition) + 2 + processing[1].length
             )
             .substring(0, 5);
-          console.log("colonchecker: " + colonchecker);
           if (colonchecker.startsWith(":")) {
             //this is objectname
             stringified = stringified.replace(
@@ -265,11 +256,7 @@ const parser = {
           }
           type = 2;
         }
-        console.log("after:");
-        console.log(stringified + "\n\n");
       }
-      console.log("\n\n");
-      console.log(stringified);
       return stringified.replace(/\^\^\^\^\^/g, "");
     },
   };

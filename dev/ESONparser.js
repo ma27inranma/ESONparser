@@ -63,8 +63,7 @@ const parser = {
         }
       }
       if (!eson.includes("=")) {
-        console.log("beforeError: " + eson);
-        throw new Error("Invalid ESON format.");
+        throw new Error("Invalid ESON format current process: "+eson);
       }
       const currentObjName = eson.substring(0, eson.indexOf("=")).trimEnd();
       eson = eson.substring(eson.indexOf("=") + 1).trimStart();
