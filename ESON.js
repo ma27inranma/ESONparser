@@ -16,10 +16,10 @@ var ESON = {
     stringify: (value) => parser.stringify(value),
     /**
      * Converts string that contains only Number into Number.
-     * @param {Object} object
+     * @param {Object} value
      * @returns {Object}
      */
-    strNumToNum: (object) => parser.strnumToNum(value)
+    strNumToNum: (value) => parser.strnumToNum(value)
 }
 
 
