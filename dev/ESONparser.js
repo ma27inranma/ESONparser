@@ -30,6 +30,10 @@ const parser = {
             console.log("tempESON[1] == " + eson);
             return [array, eson];
           }
+          //handle endless loop
+          if(!eson.includes(']')){
+            throw new Error('Invalid ESON format. End of array is not found.');
+          }
           const commapos = eson.indexOf(",");
           if (commapos == -1 || commapos > eson.indexOf("]")) {
             const tempEson = eson.substring(0, eson.indexOf("]")) + ",";
@@ -40,7 +44,11 @@ const parser = {
             const value = eson
               .substring(0, eson.indexOf("'"))
               .replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'");
-            eson = eson.substring(eson.indexOf("'") + 1);
+            eson = eson.substring(eson.indexOf("'") + 1).trimStart();
+            if(eson[0]==','){
+              eson=eson.substring(1);
+            }
+            console.log('quote found. current eson:'+eson);
             array.push(value);
           } else if (eson.startsWith("{")) {
             eson = eson.substring(1);
@@ -48,7 +56,7 @@ const parser = {
             eson = tempEson[1];
             array.push(tempEson[0]);
           } else if (eson.startsWith("[")) {
-            eson = eson.substring(1);
+            // eson = eson.substring(1);
             const tempEson = this.getchildren(eson);
             eson = tempEson[1];
             array.push(tempEson[0]);
@@ -65,8 +73,18 @@ const parser = {
       if (!eson.includes("=")) {
         throw new Error("Invalid ESON format current process: "+eson);
       }
-      const currentObjName = eson.substring(0, eson.indexOf("=")).trimEnd();
-      eson = eson.substring(eson.indexOf("=") + 1).trimStart();
+      let currentObjName;
+      if(eson[0]=='\''){
+        eson=eson.substring(1);
+        currentObjName=eson.substring(0,eson.indexOf('\'')).replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, '\'');
+        eson=eson.substring(eson.indexOf('\'')+1).trimStart();
+        if(eson[0]=='='){
+          eson=eson.substring(1).trimStart();
+        }
+      }else{
+        currentObjName = eson.substring(0, eson.indexOf("=")).trimEnd();
+        eson = eson.substring(eson.indexOf("=") + 1).trimStart();
+      }
       const commapos = eson.indexOf(",");
       if (commapos == -1) {
         console.log("not found: " + eson);
@@ -125,7 +143,7 @@ const parser = {
           eson = eson.substring(1).trimStart();
         }
       }
-      if (!eson.includes("=")) {
+      if (!eson.includes("=") && !eson.includes(',')) {
         break;
       }
       if (eson.startsWith("{")) {
@@ -134,7 +152,24 @@ const parser = {
         Object.assign(obj, getChild[0]);
         eson = getChild[1];
       } else {
-        const currentObjName = eson.substring(0, eson.indexOf("="));
+        console.log("loaded else");
+        //is input array?
+        const equalpos = eson.indexOf("=");
+        if (equalpos == -1) {
+          //input is array.
+          if(eson[0]!='[') eson="[" + eson + "]";
+        } else if (equalpos > eson.indexOf(",")) {
+          //input is array.
+          if(eson[0]!='[') eson="[" + eson + "]";
+        }
+        //if object ends with }?
+        if ((eson.trimEnd().endsWith("}")==false) && (eson.trimEnd().endsWith("]")==false)) {
+          eson += "}";
+        }
+        console.log('input:'+eson);
+        const getChild = this.getchildren(eson);
+        return getChild[0];
+        /*const currentObjName = eson.substring(0, eson.indexOf("="));
         eson = eson.substring(eson.indexOf("=") + 1).trimStart();
         const commapos = eson.indexOf(",");
         if (commapos > eson.indexOf("}") || commapos == -1) {
@@ -150,7 +185,7 @@ const parser = {
         }
         const value = eson.substring(0, eson.indexOf(",")).trimEnd();
         eson = eson.substring(eson.indexOf(",") + 1).trimStart();
-        Object.assign(obj, { [currentObjName]: value });
+        Object.assign(obj, { [currentObjName]: value });*/
       }
     }
     console.log("taken time: " + (Date.now() - date));
@@ -251,7 +286,7 @@ const parser = {
 
 rlinterface.on("line", (data) => {
   if (data == "a") {
-    console.log(parser.parse(`{1=[],2=[]}`));
+    console.log(parser.parse(`{arr=['1', '2']}`));
   } else {
     console.log(eval(data));
   }
