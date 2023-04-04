@@ -155,10 +155,14 @@ const parser = {
         console.log("loaded else");
         //is input array?
         const equalpos = eson.indexOf("=");
+        const commapos = eson.indexOf(',');
         if (equalpos == -1) {
           //input is array.
           if(eson[0]!='[') eson="[" + eson + "]";
-        } else if (equalpos > eson.indexOf(",")) {
+        } else if (commapos == -1){
+          //input is object
+          //nop
+        } else if (equalpos > commapos) {
           //input is array.
           if(eson[0]!='[') eson="[" + eson + "]";
         }
