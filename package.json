@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/ma27inranma/ESONparser#readme",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "@ma27inranma:registry": "https://npm.pkg.github.com"
   }
 }
