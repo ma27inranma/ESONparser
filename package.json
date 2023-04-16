@@ -9,10 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ma27inranma/ESONparser.git"
-  },
+  "repository": "ma27inranma/ESONparser",
   "keywords": [
     "parser"
   ],
