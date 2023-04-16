@@ -1,0 +1,28 @@
+{
+  "name": "@ma27inranma/esonparser",
+  "version": "1.0.0",
+  "description": "easy json!",
+  "main": "ESON.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ma27inranma/ESONparser.git"
+  },
+  "keywords": [
+    "parser"
+  ],
+  "author": "ma27inranma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ma27inranma/ESONparser/issues"
+  },
+  "homepage": "https://github.com/ma27inranma/ESONparser#readme",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
