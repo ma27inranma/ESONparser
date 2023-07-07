@@ -13,7 +13,7 @@ var ESON = {
      * @param {any} value A JavaScript value, usually an object or array, to be converted.
      * @returns {string}
      */
-    stringify: (value) => parser.stringify(value),
+    stringify: (value) => parser.standaloneStringify(value),
     /**
      * Converts string that contains only Number into Number.
      * @param {Object} value
@@ -83,10 +83,7 @@ const parser = {
             eson = tempEson[1];
             array.push(tempEson[0]);
           } else {
-            const value = eson
-              .substring(0, eson.indexOf(","))
-              .trimEnd()
-              .replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'");
+            const value = this.parseESONstring( eson.substring(0, eson.indexOf(",")).trimEnd().replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'") );
             eson = eson.substring(eson.indexOf(",") + 1);
             array.push(value);
           }
@@ -137,10 +134,7 @@ const parser = {
         eson = tempEson[1];
         Object.assign(obj, { [currentObjName]: tempEson[0] });
       } else {
-        const value = eson
-          .substring(0, eson.indexOf(","))
-          .trimEnd()
-          .replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'");
+        const value = this.parseESONstring( eson.substring(0, eson.indexOf(",")).trimEnd().replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'") );
         eson = eson.substring(eson.indexOf(",") + 1).trimStart();
         Object.assign(obj, { [currentObjName]: value });
       }
@@ -164,9 +158,9 @@ const parser = {
           eson = eson.substring(1).trimStart();
         }
       }
-      if (!eson.includes("=") && !eson.includes(',')) {
-        break;
-      }
+      // if (!eson.includes("=") && !eson.includes(',')) {
+      //   break;
+      // }  breaks single value array.
       if (eson.startsWith("{")) {
         eson = eson.substring(1).trimStart();
         const getChild = this.getchildren(eson);
@@ -176,7 +170,7 @@ const parser = {
         //is input array?
         const equalpos = eson.indexOf("=");
         const commapos = eson.indexOf(',');
-        if (equalpos == -1) {
+        if (equalpos == -1 || (equalpos==-1 && commapos==-1)) {
           //input is array.
           if(eson[0]!='[') eson="[" + eson + "]";
         } else if (commapos == -1){
@@ -232,6 +226,9 @@ const parser = {
     });
     return obj;
   },
+  /**
+   * @deprecated slow and unstable buggy code.
+  */
   stringify: function (obj = {}) {
     let stringified = JSON.stringify(obj).replace(/'/g, "\\'");
     let separated = stringified.split('"');
@@ -295,4 +292,51 @@ const parser = {
     }
     return stringified.replace(/\^\^\^\^\^/g, "");
   },
+  standaloneStringify:function(obj){
+    let stringified='';
+
+    if(obj instanceof Array){
+      stringified=`[`;
+      obj.forEach(value=>{
+        if(typeof value == 'string' || typeof value == 'number'){
+          stringified+=`${this.toESONstring(value)},`;
+        }else if(typeof value == "bigint"){
+          stringified+=`$n$${value}`;
+        }else{
+          stringified+=`${this.standaloneStringify(value)},`;
+        }
+      })
+      if(stringified.endsWith(',')) stringified=stringified.substring(0,stringified.length-1);
+      stringified+=']';
+    }else if(obj instanceof Object){
+      stringified='{';
+      Object.entries(obj).forEach(entry=>{
+        if(typeof entry[1] == 'string' || typeof entry[1] == 'number'){
+          stringified+=entry[0]+'='+this.toESONstring(entry[1])+',';
+        }else if(typeof entry[1] == "bigint"){
+          stringified+=`${entry[0]}=$n$${entry[1]},`;
+        }else{
+          stringified+=entry[0]+'='+this.standaloneStringify(entry[1])+',';
+        }
+      })
+
+      if(stringified.endsWith(',')) stringified=stringified.substring(0,stringified.length-1);
+      stringified+='}';
+    }
+
+    return stringified;
+  },
+  toESONstring:function(str=''){
+    str=str.replace(/\'/g, '\\\'');
+    if(str.includes(',')) str="'"+str+"'";
+
+    return str;
+  },
+  parseESONstring:function(str=''){
+    if(str.startsWith('$n$')){
+      return BigInt(str.substring(3));
+    }
+    
+    return str;
+  }
 };

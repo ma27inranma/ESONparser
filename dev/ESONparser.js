@@ -61,10 +61,7 @@ const parser = {
             eson = tempEson[1];
             array.push(tempEson[0]);
           } else {
-            const value = eson
-              .substring(0, eson.indexOf(","))
-              .trimEnd()
-              .replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'");
+            const value = this.parseESONstring( eson.substring(0, eson.indexOf(",")).trimEnd().replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'") );
             eson = eson.substring(eson.indexOf(",") + 1);
             array.push(value);
           }
@@ -116,10 +113,7 @@ const parser = {
         eson = tempEson[1];
         Object.assign(obj, { [currentObjName]: tempEson[0] });
       } else {
-        const value = eson
-          .substring(0, eson.indexOf(","))
-          .trimEnd()
-          .replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'");
+        const value = this.parseESONstring( eson.substring(0, eson.indexOf(",")).trimEnd().replace(/\^\^\^\^\^\[QUOTE\]\^\^\^\^\^/g, "'") );
         eson = eson.substring(eson.indexOf(",") + 1).trimStart();
         Object.assign(obj, { [currentObjName]: value });
       }
@@ -143,9 +137,9 @@ const parser = {
           eson = eson.substring(1).trimStart();
         }
       }
-      if (!eson.includes("=") && !eson.includes(',')) {
-        break;
-      }
+      // if (!eson.includes("=") && !eson.includes(',')) {
+      //   break;
+      // }
       if (eson.startsWith("{")) {
         eson = eson.substring(1).trimStart();
         const getChild = this.getchildren(eson);
@@ -156,7 +150,7 @@ const parser = {
         //is input array?
         const equalpos = eson.indexOf("=");
         const commapos = eson.indexOf(',');
-        if (equalpos == -1) {
+        if (equalpos == -1 || (equalpos==-1 && commapos==-1)) {
           //input is array.
           if(eson[0]!='[') eson="[" + eson + "]";
         } else if (commapos == -1){
@@ -214,6 +208,9 @@ const parser = {
     });
     return obj;
   },
+  /**
+   * @deprecated slow and unstable buggy code.
+  */
   stringify: function (obj = {}) {
     let stringified = JSON.stringify(obj).replace(/'/g, "\\'");
     let separated = stringified.split('"');
@@ -286,12 +283,74 @@ const parser = {
     console.log(stringified);
     return stringified.replace(/\^\^\^\^\^/g, "");
   },
+  standaloneStringify:function(obj){
+    let stringified='';
+
+    if(obj instanceof Array){
+      stringified=`[`;
+      obj.forEach(value=>{
+        if(typeof value == 'string' || typeof value == 'number'){
+          console.log(value);
+          stringified+=`${this.toESONstring(value)},`;
+        }else if(typeof value == "bigint"){
+          console.log(value);
+          stringified+=`$n$${value}`;
+        }else{
+          stringified+=`${this.standaloneStringify(value)},`;
+        }
+      })
+      if(stringified.endsWith(',')) stringified=stringified.substring(0,stringified.length-1);
+      stringified+=']';
+    }else if(obj instanceof Object){
+      stringified='{';
+      Object.entries(obj).forEach(entry=>{
+        if(typeof entry[1] == 'string' || typeof entry[1] == 'number'){
+          stringified+=entry[0]+'='+this.toESONstring(entry[1])+',';
+        }else if(typeof entry[1] == "bigint"){
+          console.log(entry[1]);
+          stringified+=`${entry[0]}=$n$${entry[1]},`;
+        }else{
+          stringified+=entry[0]+'='+this.standaloneStringify(entry[1])+',';
+        }
+      })
+
+      if(stringified.endsWith(',')) stringified=stringified.substring(0,stringified.length-1);
+      stringified+='}';
+    }
+
+    return stringified;
+  },
+  toESONstring:function(str=''){
+    str=str.replace(/\'/g, '\\\'');
+    if(str.includes(',')) str="'"+str+"'";
+
+    return str;
+  },
+  parseESONstring:function(str=''){
+    if(str.startsWith('$n$')){
+      return BigInt(str.substring(3));
+    }
+    
+    return str;
+  }
 };
 
 rlinterface.on("line", (data) => {
   if (data == "a") {
-    console.log(parser.parse(`{arr=['1', '2']}`));
+    const stringified=parser.standaloneStringify(['array',['another',{here_is_obj:{value:'hello, world[\'this is it\']'}}]]);
+    console.log(stringified);
+    console.dir(parser.parse(stringified),{depth:Infinity});
+  }else if (data == "aa") {
+    console.log( parser.parse('test='+parser.toESONstring('test\'211, flycrusher')) );
+  }else if (data == "aaa") {
+    console.log(parser.parseESONstring('$n$1'));
+  } else if(data=='close') {
+    process.exit(0);
   } else {
-    console.log(eval(data));
+    console.log('parsing...\n\n');
+    const parsed=parser.parse(data);
+    console.log(parsed,'\n\n');
+    console.log('stringifying...\n\n');
+    console.log(parser.standaloneStringify(parsed));
   }
 });
