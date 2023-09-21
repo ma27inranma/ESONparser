@@ -148,7 +148,7 @@ const parser = {
     eson = eson.replace(/\\'/g, "^^^^^[QUOTE]^^^^^");
     while (true) {
       tryCount++;
-      if (tryCount > 10) {
+      if (tryCount > 400) {
         throw "Unknown Error while parsing ESON.";
       }
       eson = eson.trimStart();
@@ -166,6 +166,8 @@ const parser = {
         const getChild = this.getchildren(eson);
         Object.assign(obj, getChild[0]);
         eson = getChild[1];
+
+        break; //F
       } else {
         //is input array?
         const equalpos = eson.indexOf("=");
@@ -298,7 +300,7 @@ const parser = {
     if(obj instanceof Array){
       stringified=`[`;
       obj.forEach(value=>{
-        if(typeof value == 'string' || typeof value == 'number'){
+        if(typeof value == 'string' || typeof value == 'number' || typeof value == 'boolean'){
           stringified+=`${this.toESONstring(value)},`;
         }else if(typeof value == "bigint"){
           stringified+=`$n$${value}`;
@@ -311,7 +313,7 @@ const parser = {
     }else if(obj instanceof Object){
       stringified='{';
       Object.entries(obj).forEach(entry=>{
-        if(typeof entry[1] == 'string' || typeof entry[1] == 'number'){
+        if(typeof entry[1] == 'string' || typeof entry[1] == 'number' || typeof entry[1] == 'boolean'){
           stringified+=entry[0]+'='+this.toESONstring(entry[1])+',';
         }else if(typeof entry[1] == "bigint"){
           stringified+=`${entry[0]}=$n$${entry[1]},`;
@@ -326,11 +328,13 @@ const parser = {
 
     return stringified;
   },
-  toESONstring:function(str=''){
-    str=str.replace(/\'/g, '\\\'');
-    if(str.includes(',')) str="'"+str+"'";
+  toESONstring:function(val=''){
+    if(typeof val == 'string'){
+      val=val.replace(/\'/g, '\\\'');
+      if(val.includes(',')) val="'"+val+"'";
+    };
 
-    return str;
+    return ''+val;
   },
   parseESONstring:function(str=''){
     if(str.startsWith('$n$')){
