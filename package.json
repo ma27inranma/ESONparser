@@ -1,7 +1,7 @@
 {
   "name": "@ma27inranma/esonparser",
-  "version": "1.0.4",
-  "description": "easy json!",
+  "version": "1.0.6",
+  "description": "easy json(Extended Simple ObjectNotation)!",
   "main": "ESON.js",
   "directories": {
     "example": "examples"

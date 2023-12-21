@@ -19,7 +19,14 @@ var ESON = {
      * @param {Object} value
      * @returns {Object}
      */
-    strNumToNum: (value) => parser.strnumToNum(value)
+    strNumToNum: (value) => parser.strnumToNum(value),
+    /**
+     * Clone an object using ESON
+     * @param {object} obj the object you want to make a clone
+     * @returns {object} an cloned object.
+     * @throws throws if the passed argument is not an object
+     */
+    cloneObj: (obj) => parser.cloneObject(obj)
 }
 
 
@@ -304,6 +311,8 @@ const parser = {
           stringified+=`${this.toESONstring(value)},`;
         }else if(typeof value == "bigint"){
           stringified+=`$n$${value}`;
+        }else if(entry[1] instanceof Date){
+          stringified+=`${entry[0]}=$D$${entry[1]},`;
         }else{
           stringified+=`${this.standaloneStringify(value)},`;
         }
@@ -317,6 +326,8 @@ const parser = {
           stringified+=entry[0]+'='+this.toESONstring(entry[1])+',';
         }else if(typeof entry[1] == "bigint"){
           stringified+=`${entry[0]}=$n$${entry[1]},`;
+        }else if(entry[1] instanceof Date){
+          stringified+=`${entry[0]}=$D$${entry[1]},`;
         }else{
           stringified+=entry[0]+'='+this.standaloneStringify(entry[1])+',';
         }
@@ -339,8 +350,20 @@ const parser = {
   parseESONstring:function(str=''){
     if(str.startsWith('$n$')){
       return BigInt(str.substring(3));
+    }else if(str.startsWith('$D$')){
+      try{
+        new Date(str.substring(3));
+      }catch{}
     }
+
+    if(str.startsWith('\\$'))
+      str=str.substring(1);
     
     return str;
+  },
+  cloneObject:function(obj){
+    if(!(obj instanceof Object)) throw new Error('The argument passed to function [0] must be object.');
+
+    return this.parse(this.standaloneStringify(obj));
   }
 };
