@@ -349,10 +349,12 @@ const parser = {
   },
   parseESONstring:function(str=''){
     if(str.startsWith('$n$')){
-      return BigInt(str.substring(3));
+      try{
+        return BigInt(str.substring(3));
+      }catch{};
     }else if(str.startsWith('$D$')){
       try{
-        new Date(str.substring(3));
+        return new Date(str.substring(3));
       }catch{}
     }
 
