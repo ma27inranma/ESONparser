@@ -1,3 +1,6 @@
+# ATTENTION!
+Do not use this in production. This has many bugs or trash features.
+
 # ESONparser
 this does:
 ```js
